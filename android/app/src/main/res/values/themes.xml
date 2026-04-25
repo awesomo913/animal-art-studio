@@ -1,0 +1,6 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+  <style name="Theme.AnimalArtStudio" parent="Theme.Material3.Light.NoActionBar">
+    <item name="android:statusBarColor" tools:targetApi="l">@color/launcher_bg</item>
+    <item name="android:navigationBarColor">@color/launcher_bg</item>
+  </style>
+</resources>

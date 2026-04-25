@@ -1,0 +1,5 @@
+# Copy to local.properties. For Android emulator talking to a server on the same PC:
+animal_art_studio_url=http://10.0.2.2:8080/
+
+# For a phone on the same Wi‑Fi, use your computer's LAN address, e.g.:
+# animal_art_studio_url=http://192.168.1.42:8080/

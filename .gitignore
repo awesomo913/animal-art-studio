@@ -1,0 +1,35 @@
+# Android
+android/local.properties
+android/.gradle/
+android/**/build/
+android/captures/
+android/*.iml
+android/.idea/
+*.iml
+
+# Gradle
+.gradle/
+**/build/
+!gradle/wrapper/gradle-wrapper.jar
+
+# Kotlin
+.kotlin/
+
+# JVM
+*.class
+hs_err_pid*.log
+
+# H2 / local DB (backend dev)
+backend/data/
+*.db
+*.trace.db
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Secrets
+*.jks
+*.keystore
+.env
+.env.*
