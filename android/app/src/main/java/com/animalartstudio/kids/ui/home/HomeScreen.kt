@@ -42,6 +42,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.animalartstudio.kids.data.LessonSummaryDto
 import com.animalartstudio.kids.Graph
+import com.animalartstudio.kids.ui.star.starShowForLesson
 import com.animalartstudio.kids.ui.theme.CoralHug
 import com.animalartstudio.kids.ui.theme.Forest
 import com.animalartstudio.kids.ui.theme.SkyPop
@@ -145,6 +146,7 @@ private fun LessonCard(
     l: LessonSummaryDto,
     onOpenLesson: () -> Unit,
 ) {
+  val star = starShowForLesson(l.id, l.animalKey)
   val chip =
       when (l.animalKey) {
         "penguin" -> "Waddle" to SkyPop
@@ -166,13 +168,15 @@ private fun LessonCard(
   ) {
     Column(verticalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.weight(1f)) {
       Text(l.title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.ExtraBold)
-      if (!l.subtitle.isNullOrBlank()) {
-        Text(
-            l.subtitle,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-        )
-      }
-      Text("${l.estMinutes} min • friendly coach", color = MaterialTheme.colorScheme.tertiary, fontWeight = FontWeight.SemiBold)
+      Text(
+          l.subtitle ?: star.homeCardLine,
+          color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f),
+      )
+      Text(
+          "${l.estMinutes} min • starring ${star.buddyName}",
+          color = MaterialTheme.colorScheme.tertiary,
+          fontWeight = FontWeight.SemiBold,
+      )
     }
     Icon(Icons.Rounded.EmojiEmotions, contentDescription = null, modifier = Modifier.padding(4.dp), tint = chip.second)
   }

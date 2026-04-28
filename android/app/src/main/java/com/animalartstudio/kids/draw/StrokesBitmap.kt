@@ -26,8 +26,9 @@ object StrokesBitmap {
       strokes: List<InkStroke>,
       width: Float,
       height: Float,
+      paperArgb: Int = PAPER,
   ): String {
-    val b = render(strokes, width, height, OUT, OUT, PAPER)
+    val b = render(strokes, width, height, OUT, OUT, paperArgb)
     val out = ByteArrayOutputStream(OUT * OUT / 2)
     b.compress(Bitmap.CompressFormat.PNG, 100, out)
     val bytes = out.toByteArray()
@@ -40,7 +41,8 @@ object StrokesBitmap {
       height: Float,
       w: Int,
       h: Int,
-  ): Bitmap = render(strokes, width, height, w, h, PAPER)
+      paperArgb: Int = PAPER,
+  ): Bitmap = render(strokes, width, height, w, h, paperArgb)
 
   private fun render(
       strokes: List<InkStroke>,

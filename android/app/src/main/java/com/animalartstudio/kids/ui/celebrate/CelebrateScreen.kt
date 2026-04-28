@@ -28,10 +28,10 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.animalartstudio.kids.ui.shared.DrawScratchpad
-import com.animalartstudio.kids.ui.theme.Forest
-import com.animalartstudio.kids.ui.theme.SkyPop
+import com.animalartstudio.kids.ui.star.starShowForLesson
 import androidx.compose.runtime.LaunchedEffect
 
 @Composable
@@ -41,6 +41,8 @@ fun CelebrateRoute(
   val view = LocalView.current
   val bmp = DrawScratchpad.lastDrawing
   val key = DrawScratchpad.animalKey
+  val star =
+      starShowForLesson(DrawScratchpad.lessonId.orEmpty(), key.orEmpty())
   val t = rememberInfiniteTransition(label = "b")
   val bounce = t.animateFloat(0f, 18f, animationSpec = infiniteRepeatable(tween(900, easing = FastOutSlowInEasing), RepeatMode.Reverse), label = "b")
   val spin = t.animateFloat(-4f, 4f, animationSpec = infiniteRepeatable(tween(1500, easing = FastOutSlowInEasing), RepeatMode.Reverse), label = "s")
@@ -50,19 +52,14 @@ fun CelebrateRoute(
         verticalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterVertically),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-      val title =
-          when (key) {
-            "penguin" -> "SPLASH! Your penguin wobbles to life"
-            "owl" -> "HOOT! A fluffy blink"
-            else -> "Hooray! A wiggly little friend"
-          }
       Text(
-          title,
+          star.celebrateTitle,
           style = MaterialTheme.typography.titleLarge,
           fontWeight = FontWeight.ExtraBold,
+          textAlign = TextAlign.Center,
       )
       Text(
-          "The studio saved a tiny dance just for you. (You can add real animal sound files later in res/raw/.)",
+          star.celebrateSub,
           color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.75f),
       )
       if (bmp != null) {
@@ -82,8 +79,8 @@ fun CelebrateRoute(
         Text("We could not find your last drawing, but the party still counts!")
       }
       Text(
-          "Pretend sound: wiggle‑waddle‑sparkle! *boop*",
-          color = if (key == "penguin") SkyPop else Forest,
+          star.celebrateSfxLine,
+          color = star.accent.copy(alpha = 0.92f),
           fontWeight = FontWeight.ExtraBold,
       )
       FilledTonalButton(

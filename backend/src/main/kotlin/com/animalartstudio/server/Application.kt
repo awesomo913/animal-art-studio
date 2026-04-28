@@ -1,5 +1,6 @@
 package com.animalartstudio.server
 
+import com.animalartstudio.server.db.ContentMigrator
 import com.animalartstudio.server.db.ContentSeed
 import com.animalartstudio.server.db.DatabaseFactory
 import com.animalartstudio.server.service.CoachingService
@@ -71,6 +72,7 @@ fun Application.module() {
       password = dbPassword,
   )
   ContentSeed.runIfEmpty()
+  ContentMigrator.upgradePenguinLessonIfStale()
 
   val coaching = CoachingService(nudges)
   val crash = CrashIngestService()

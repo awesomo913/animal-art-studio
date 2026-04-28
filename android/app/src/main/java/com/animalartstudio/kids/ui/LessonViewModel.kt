@@ -105,9 +105,11 @@ class LessonViewModel(
   fun rememberForCelebrate(
       bmp: Bitmap,
       key: String,
+      lessonId: String,
   ) {
     DrawScratchpad.lastDrawing = bmp
     DrawScratchpad.animalKey = key
+    DrawScratchpad.lessonId = lessonId
   }
 }
 
