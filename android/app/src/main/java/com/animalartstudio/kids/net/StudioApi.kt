@@ -14,6 +14,7 @@ import com.animalartstudio.kids.util.RingLog
 import java.io.IOException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.serializer
 import kotlinx.serialization.json.Json
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.MediaType.Companion.toMediaType
@@ -64,7 +65,7 @@ class StudioApi(
   }
 
   private inline fun <reified B : Any, reified T> post(path: String, body: B): T {
-    val jsonBody = json.encodeToString(body)
+    val jsonBody = json.encodeToString(serializer<B>(), body)
     val req =
         Request.Builder()
             .url(url(path))

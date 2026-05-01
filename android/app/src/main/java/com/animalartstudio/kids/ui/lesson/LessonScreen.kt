@@ -124,7 +124,7 @@ fun LessonRoute(
           Text(
               star.showTitle,
               style = MaterialTheme.typography.titleLarge,
-              fontWeight = FontWeight.ExtraBlack,
+              fontWeight = FontWeight.Black,
               color = MaterialTheme.colorScheme.onBackground,
           )
           b.lesson.subtitle?.takeIf { it.isNotBlank() }?.let { sub ->

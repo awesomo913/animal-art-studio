@@ -9,6 +9,9 @@ import androidx.compose.ui.geometry.Offset
 import java.io.ByteArrayOutputStream
 import kotlin.math.hypot
 
+/** Minimum point spacing when simplifying strokes (kept in sync with stroke capture smoothing). */
+private const val MERGE_NEARBY_POINTS_PX = 2f
+
 @Immutable
 data class InkStroke(
     val points: List<Offset>,
@@ -20,7 +23,6 @@ object StrokesBitmap {
   private const val OUT = 512
   // Paper cream — matches the coaching canvas background
   private const val PAPER = 0xFFFF_F8E7.toInt()
-  private const val MIN_MOVE = 2f
 
   fun toPngBase64(
       strokes: List<InkStroke>,
@@ -96,7 +98,7 @@ fun simplify(points: List<Offset>): List<Offset> {
   for (i in 1 until points.size) {
     val last = out.last()
     val cur = points[i]
-    if (hypot((cur - last).x, (cur - last).y) >= MIN_MOVE) {
+    if (hypot((cur - last).x, (cur - last).y) >= MERGE_NEARBY_POINTS_PX) {
       out.add(cur)
     }
   }

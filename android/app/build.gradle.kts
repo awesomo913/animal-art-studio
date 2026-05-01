@@ -31,7 +31,11 @@ android {
     buildConfigField("String", "ANIMAL_ART_STUDIO_URL", "\"${base.trimEnd('/').replace("\\", "\\\\")}\"")
   }
   buildTypes {
-    release { isMinifyEnabled = false }
+    release {
+      isMinifyEnabled = false
+      // Self-contained installable APK for sideloading (replace with a release keystore for Play Store).
+      signingConfig = signingConfigs.getByName("debug")
+    }
   }
   compileOptions {
     sourceCompatibility = JavaVersion.VERSION_17
@@ -53,6 +57,7 @@ dependencies {
   implementation("androidx.compose.ui:ui")
   implementation("androidx.compose.ui:ui-tooling-preview")
   implementation("androidx.compose.material3:material3")
+  implementation("com.google.android.material:material:1.12.0")
   implementation("androidx.compose.material:material-icons-extended")
   implementation("androidx.navigation:navigation-compose:2.8.3")
   implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
