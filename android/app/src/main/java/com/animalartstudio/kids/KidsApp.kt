@@ -4,6 +4,8 @@ import android.app.Application
 import android.provider.Settings
 import com.animalartstudio.kids.crash.CrashStore
 import com.animalartstudio.kids.data.ParentSettingsRepo
+import com.animalartstudio.kids.net.HttpStudioApi
+import com.animalartstudio.kids.net.LocalStudioApi
 import com.animalartstudio.kids.net.StudioApi
 import com.animalartstudio.kids.obs.Observability
 import com.animalartstudio.kids.util.RingLog
@@ -19,7 +21,14 @@ class KidsApp : Application() {
   override fun onCreate() {
     super.onCreate()
     val log = RingLog()
-    val api = StudioApi(BuildConfig.ANIMAL_ART_STUDIO_URL, log)
+    val api: StudioApi =
+        if (BuildConfig.OFFLINE_BUILD) {
+          log.append("api = LocalStudioApi (offline build)")
+          LocalStudioApi(log)
+        } else {
+          log.append("api = HttpStudioApi(${BuildConfig.ANIMAL_ART_STUDIO_URL})")
+          HttpStudioApi(BuildConfig.ANIMAL_ART_STUDIO_URL, log)
+        }
     val crashStore = CrashStore(this)
     val deviceId = stableId()
     val parentSettings = ParentSettingsRepo(this)
@@ -43,7 +52,11 @@ class KidsApp : Application() {
     }
 
     // Background-drain any crashes from a prior session — fire-and-forget.
-    backgroundScope.launch { runCatching { crashStore.drainPending(api) } }
+    // In offline builds there's no network sink, so skip the drain (LocalStudioApi
+    // would return success and the file would be deleted without ever leaving the device).
+    if (!BuildConfig.OFFLINE_BUILD) {
+      backgroundScope.launch { runCatching { crashStore.drainPending(api) } }
+    }
   }
 
   private fun stableId(): String {

@@ -16,8 +16,8 @@ android {
     applicationId = "com.animalartstudio.kids"
     minSdk = 26
     targetSdk = 35
-    versionCode = 3
-    versionName = "0.2.1"
+    versionCode = 4
+    versionName = "0.3.0"
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     val p = project.rootProject.file("local.properties")
     val base =
@@ -29,6 +29,10 @@ android {
           "http://10.0.2.2:8080/"
         }
     buildConfigField("String", "ANIMAL_ART_STUDIO_URL", "\"${base.trimEnd('/').replace("\\", "\\\\")}\"")
+    // Self-contained APK: run coaching in-process, no Ktor backend.
+    // Override via -PofflineBuild=false to produce a LAN-backed build.
+    val offline = (project.findProperty("offlineBuild") as? String)?.toBoolean() ?: true
+    buildConfigField("Boolean", "OFFLINE_BUILD", offline.toString())
   }
   buildTypes {
     release {
