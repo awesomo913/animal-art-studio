@@ -65,6 +65,7 @@ class LessonViewModel(
 
   fun submitPng(
       b64: String,
+      strokeCount: Int,
       onDone: (FeedbackResponse) -> Unit,
   ) =
       viewModelScope.launch {
@@ -73,7 +74,10 @@ class LessonViewModel(
         val sidx = cur.stepIndex
         busy = true
         try {
-          val fb = app.api.submit(sid, SubmitStepRequest(stepIndex = sidx, imageBase64 = b64))
+          val fb = app.api.submit(
+              sid,
+              SubmitStepRequest(stepIndex = sidx, imageBase64 = b64, strokeCount = strokeCount),
+          )
           if (cur.lesson.id != lessonId) return@launch
           val (nextStep, nextDto) = advance(cur.lesson, sidx, fb)
           stepIndex = nextStep

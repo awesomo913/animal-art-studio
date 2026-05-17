@@ -21,16 +21,16 @@ class CoachingService(private val nudgesForMagic: Int) {
   }
 
   fun getLesson(lessonId: String): LessonDetailDto? = transaction {
-    val lesson = Lessons.select { Lessons.id eq lessonId }.singleOrNull() ?: return@transaction null
+    val lesson = Lessons.selectAll().where { Lessons.id eq lessonId }.singleOrNull() ?: return@transaction null
     val steps =
-        LessonSteps.select { LessonSteps.lessonId eq lessonId }
+        LessonSteps.selectAll().where { LessonSteps.lessonId eq lessonId }
             .orderBy(LessonSteps.stepIndex, SortOrder.ASC)
             .map { it.toStepDto() }
     lesson.toDetail(steps)
   }
 
   fun createSession(req: CreateSessionRequest): SessionResponse? = transaction {
-    val exists = Lessons.select { Lessons.id eq req.lessonId }.singleOrNull() ?: return@transaction null
+    val exists = Lessons.selectAll().where { Lessons.id eq req.lessonId }.singleOrNull() ?: return@transaction null
     val id = "sess_" + UUID.randomUUID().toString().replace("-", "")
     val now = System.currentTimeMillis()
     DrawingSessions.insert {
@@ -38,6 +38,7 @@ class CoachingService(private val nudgesForMagic: Int) {
       it[DrawingSessions.lessonId] = req.lessonId
       it[DrawingSessions.deviceId] = req.deviceId.orEmpty()
       it[DrawingSessions.nudgeCount] = 0
+      it[DrawingSessions.practiceAttempts] = 0
       it[DrawingSessions.highestStepCompleted] = -1
       it[DrawingSessions.createdAt] = now
       it[DrawingSessions.updatedAt] = now
@@ -55,14 +56,14 @@ class CoachingService(private val nudgesForMagic: Int) {
       sessionId: String,
       body: SubmitStepRequest,
   ): FeedbackResponse? = transaction {
-    val row = DrawingSessions.select { DrawingSessions.id eq sessionId }.singleOrNull() ?: return@transaction null
+    val row = DrawingSessions.selectAll().where { DrawingSessions.id eq sessionId }.singleOrNull() ?: return@transaction null
     val lessonId = row[DrawingSessions.lessonId]
     val stepRow =
-        LessonSteps.select { (LessonSteps.lessonId eq lessonId) and (LessonSteps.stepIndex eq body.stepIndex) }
+        LessonSteps.selectAll().where { (LessonSteps.lessonId eq lessonId) and (LessonSteps.stepIndex eq body.stepIndex) }
             .singleOrNull()
             ?: return@transaction null
     val maxIndex =
-        LessonSteps.select { LessonSteps.lessonId eq lessonId }
+        LessonSteps.selectAll().where { LessonSteps.lessonId eq lessonId }
             .map { it[LessonSteps.stepIndex] }
             .maxOrNull() ?: 0
     if (body.stepIndex < 0 || body.stepIndex > maxIndex) {
@@ -80,11 +81,16 @@ class CoachingService(private val nudgesForMagic: Int) {
     }
     val stats = ImageAnalyzer.stats(image)
 
+    // Anti-gaming: if the step demands a minimum stroke count, count low-stroke
+    // submissions as failures (don't crash the session). The frontend may not
+    // send strokeCount yet (defaults to 0) so this only fires when both sides
+    // opt in.
+    val strokesOk = step.minStrokes == 0 || body.strokeCount >= step.minStrokes
+    val passed = isPassing(stats.coverage, step) && strokesOk
+
     var nudges = row[DrawingSessions.nudgeCount]
-    val passed = isPassing(stats.coverage, step)
-    if (!passed) {
-      nudges += 1
-    }
+    var practice = row[DrawingSessions.practiceAttempts] + 1 // every submit is practice
+    if (!passed) nudges += 1
     var highest = row[DrawingSessions.highestStepCompleted]
     if (passed) {
       highest = maxOf(highest, body.stepIndex)
@@ -92,15 +98,16 @@ class CoachingService(private val nudgesForMagic: Int) {
     val now = System.currentTimeMillis()
     DrawingSessions.update({ DrawingSessions.id eq sessionId }) {
       it[DrawingSessions.nudgeCount] = nudges
+      it[DrawingSessions.practiceAttempts] = practice
       it[DrawingSessions.highestStepCompleted] = highest
       it[DrawingSessions.updatedAt] = now
     }
 
     val isLast = body.stepIndex == maxIndex
-    val lesson = Lessons.select { Lessons.id eq lessonId }.single()
+    val lesson = Lessons.selectAll().where { Lessons.id eq lessonId }.single()
     val animalKey = lesson[Lessons.animalKey]
-    val (message, tone) = feedbackCopy(step, stats, passed, isLast)
-    val bringUnlocked = passed && isLast && nudges >= nudgesForMagic
+    val (message, tone) = feedbackCopy(step, stats, passed, isLast, strokesOk, body.strokeCount)
+    val bringUnlocked = passed && isLast && practice >= nudgesForMagic
     val lessonComplete = passed && isLast
     val next = if (passed && !isLast) body.stepIndex + 1 else body.stepIndex
 
@@ -109,9 +116,10 @@ class CoachingService(private val nudgesForMagic: Int) {
         tone = tone,
         coverage = (kotlin.math.floor(stats.coverage * 1000) / 1000.0),
         nudgeCount = nudges,
+        practiceAttempts = practice,
         stepIndex = body.stepIndex,
         stepPassed = passed,
-        stepComplete = passed,
+        stepComplete = highest >= body.stepIndex,
         lessonComplete = lessonComplete,
         nextStepIndex = next,
         bringToLifeUnlocked = bringUnlocked,
@@ -134,10 +142,15 @@ class CoachingService(private val nudgesForMagic: Int) {
       stats: ImageStats,
       passed: Boolean,
       isLast: Boolean,
+      strokesOk: Boolean,
+      strokeCount: Int,
   ): Pair<String, String> {
     if (passed) {
       val msg = if (isLast) "You did it! What a great drawing!" else step.celebrate
       return msg to "celebrate"
+    }
+    if (!strokesOk) {
+      return "A few more separate strokes would help — try lifting your finger between marks!" to "coach"
     }
     if (stats.coverage < 0.02) {
       return step.hintEmpty to "coach"
@@ -181,6 +194,7 @@ private fun org.jetbrains.exposed.sql.ResultRow.toStepDto() =
         minCoverage = this[LessonSteps.minCoverage],
         maxCoverage = this[LessonSteps.maxCoverage],
         colorHint = this[LessonSteps.colorHint],
+        minStrokes = this[LessonSteps.minStrokes],
     )
 
 private fun org.jetbrains.exposed.sql.ResultRow.toInfo() =
@@ -192,6 +206,7 @@ private fun org.jetbrains.exposed.sql.ResultRow.toInfo() =
         technique = this[LessonSteps.technique],
         minCoverage = this[LessonSteps.minCoverage],
         maxCoverage = this[LessonSteps.maxCoverage],
+        minStrokes = this[LessonSteps.minStrokes],
         hintEmpty = this[LessonSteps.hintEmpty],
         hintMore = this[LessonSteps.hintMore],
         hintAlmost = this[LessonSteps.hintAlmost],

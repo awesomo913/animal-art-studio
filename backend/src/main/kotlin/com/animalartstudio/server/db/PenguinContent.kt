@@ -19,6 +19,7 @@ internal data class StepContent(
     val hintMore: String,
     val hintAlmost: String,
     val celebrate: String,
+    val minStrokes: Int = 1,
 )
 
 internal fun penguinV2LessonTitle() = "Waddles' Splashy Show"
@@ -43,6 +44,7 @@ internal fun penguinV2Steps(): List<StepContent> =
             hintMore = "A little more fluff on the tummy would make me sparkle!",
             hintAlmost = "Ooh, so cozy! Tiny wiggle if the oval feels squarish?",
             celebrate = "That tummy looks snack‑ready — thank you!",
+            minStrokes = 1,
         ),
         StepContent(
             index = 1,
@@ -57,6 +59,7 @@ internal fun penguinV2Steps(): List<StepContent> =
             hintMore = "My face likes a few more giggly lines!",
             hintAlmost = "So close — smidge clearer on my beaky smile?",
             celebrate = "Peekaboo grin! I already love it!",
+            minStrokes = 3,
         ),
         StepContent(
             index = 2,
@@ -71,6 +74,7 @@ internal fun penguinV2Steps(): List<StepContent> =
             hintMore = "A few bolder curves for swimming power?",
             hintAlmost = "Flipper‑almost! Tiny bit more pizzazz on one side?",
             celebrate = "HIGH‑FIN! I'm ready for the curtain call!",
+            minStrokes = 2,
         ),
     )
 
@@ -89,6 +93,7 @@ internal fun Transaction.insertAllPenguinStepsFromV2Catalog() {
       it[LessonSteps.hintMore] = s.hintMore
       it[LessonSteps.hintAlmost] = s.hintAlmost
       it[LessonSteps.celebrate] = s.celebrate
+      it[LessonSteps.minStrokes] = s.minStrokes
     }
   }
 }

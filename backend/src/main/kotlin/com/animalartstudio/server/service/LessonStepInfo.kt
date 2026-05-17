@@ -8,6 +8,7 @@ data class LessonStepInfo(
     val technique: String,
     val minCoverage: Double,
     val maxCoverage: Double,
+    val minStrokes: Int,
     val hintEmpty: String,
     val hintMore: String,
     val hintAlmost: String,

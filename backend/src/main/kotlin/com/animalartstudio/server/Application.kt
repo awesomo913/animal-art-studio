@@ -7,6 +7,8 @@ import com.animalartstudio.server.service.CoachingService
 import com.animalartstudio.server.service.CrashIngestService
 import com.animalartstudio.server.web.configureRouting
 import com.animalartstudio.server.web.dto.ErrorBody
+import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
@@ -23,6 +25,7 @@ import io.ktor.server.request.httpMethod
 import io.ktor.server.request.uri
 import io.ktor.server.response.respond
 import kotlinx.serialization.json.Json
+import org.jetbrains.exposed.sql.transactions.transaction
 import org.slf4j.LoggerFactory
 import org.slf4j.Logger
 
@@ -39,7 +42,7 @@ fun main(args: Array<String>) {
   val env: ApplicationEngineEnvironment = applicationEngineEnvironment {
     log = LoggerFactory.getLogger("Ktor")
     module { module() }
-    connector { host = "0.0.0.0"; port = port; name = "main" }
+    connector { host = "0.0.0.0"; this.port = port }
   }
   embeddedServer(Netty, env).start(wait = true)
 }
@@ -66,6 +69,14 @@ fun Application.module() {
       ?: environment.config.propertyOrNull("animalArtStudio.coaching.nudgesRequiredForMagic")?.getString()?.toIntOrNull()
       ?: 5
 
+  // B-6: CORS allowlist comma-separated. Empty → permissive (dev). Set in prod.
+  val allowedOrigins: List<String> = (System.getenv("CORS_ALLOWED_ORIGINS")
+      ?: environment.config.propertyOrNull("animalArtStudio.cors.allowedOrigins")?.getString()
+      ?: "")
+      .split(",")
+      .map { it.trim() }
+      .filter { it.isNotEmpty() }
+
   DatabaseFactory.init(
       url = normalizeJdbc(dbUrl),
       user = dbUser,
@@ -77,7 +88,20 @@ fun Application.module() {
   val coaching = CoachingService(nudges)
   val crash = CrashIngestService()
 
-  install(CORS) { anyHost() }
+  install(CORS) {
+    if (allowedOrigins.isEmpty()) {
+      log.warn("CORS: no CORS_ALLOWED_ORIGINS set — using anyHost(). Do NOT do this in production.")
+      anyHost()
+    } else {
+      log.info("CORS: allowlist=$allowedOrigins")
+      allowedOrigins.forEach { allowHost(it) }
+    }
+    allowMethod(HttpMethod.Post)
+    allowMethod(HttpMethod.Get)
+    allowMethod(HttpMethod.Options)
+    allowHeader(HttpHeaders.ContentType)
+    allowHeader(HttpHeaders.Accept)
+  }
   install(ContentNegotiation) { json(json) }
   install(StatusPages) {
     status(HttpStatusCode.NotFound) { call, status ->
@@ -92,8 +116,17 @@ fun Application.module() {
       )
     }
   }
-  configureRouting(coaching, crash)
+  configureRouting(coaching, crash) { dbProbe() }
 }
+
+/** C-2: `SELECT 1` to confirm the JDBC connection is alive. */
+private fun dbProbe(): Boolean = runCatching {
+  transaction {
+    val stmt = connection.prepareStatement("SELECT 1", false)
+    stmt.executeQuery().use { it.next() }
+  }
+  true
+}.getOrDefault(false)
 
 private fun normalizeJdbc(url: String): String = when {
   url.startsWith("jdbc:") -> url

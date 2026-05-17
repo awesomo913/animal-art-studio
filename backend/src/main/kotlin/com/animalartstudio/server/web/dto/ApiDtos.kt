@@ -25,6 +25,8 @@ data class LessonStepDto(
     val minCoverage: Double,
     val maxCoverage: Double,
     val colorHint: String? = null,
+    /** Anti-gaming floor — 0 disables. See REVIEW_NOTES C-10. */
+    val minStrokes: Int = 0,
 )
 
 @Serializable
@@ -58,14 +60,29 @@ data class SessionResponse(
 data class SubmitStepRequest(
     val stepIndex: Int,
     val imageBase64: String,
+    /** Number of distinct strokes the user drew. Optional; 0 = client didn't track. */
+    val strokeCount: Int = 0,
 )
 
+/**
+ * Coaching response.
+ *
+ * Field semantics (post B-1 + B-4 cleanup, 2026-05-17):
+ *  - `stepPassed`     — did THIS submission satisfy the coverage check?
+ *  - `stepComplete`   — has the session ever passed this step (i.e. `highestStepCompleted >= stepIndex`)?
+ *  - `lessonComplete` — is the very last step passed in this submission?
+ *  - `nudgeCount`     — total failed attempts (drives "coach gave a tip" framing).
+ *  - `practiceAttempts` — total submissions this session, pass or fail. Drives magic unlock.
+ *  - `bringToLifeUnlocked` — gate for the celebration animation. Now keyed off `practiceAttempts`
+ *    instead of `nudgeCount` so a first-try-perfect run still earns it (bug B-1 fix).
+ */
 @Serializable
 data class FeedbackResponse(
     val message: String,
     val tone: String, // "coach" | "celebrate"
     val coverage: Double,
     val nudgeCount: Int,
+    val practiceAttempts: Int = 0,
     val stepIndex: Int,
     val stepPassed: Boolean,
     val stepComplete: Boolean,

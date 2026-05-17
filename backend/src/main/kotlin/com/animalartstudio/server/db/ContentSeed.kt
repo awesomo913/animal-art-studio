@@ -31,7 +31,7 @@ object ContentSeed {
 object ContentMigrator {
   fun upgradePenguinLessonIfStale() {
     transaction {
-      val lesson = Lessons.select { Lessons.id eq PENGUIN_LESSON_ID }.singleOrNull()
+      val lesson = Lessons.selectAll().where { Lessons.id eq PENGUIN_LESSON_ID }.singleOrNull()
           ?: return@transaction
       if (lesson[Lessons.version] >= PENGUIN_CONTENT_VERSION) {
         return@transaction
@@ -42,7 +42,9 @@ object ContentMigrator {
         it[Lessons.description] = penguinV2LessonDescription()
         it[Lessons.version] = PENGUIN_CONTENT_VERSION
       }
-      LessonSteps.deleteWhere { LessonSteps.lessonId eq PENGUIN_LESSON_ID }
+      // Exposed 0.55: deleteWhere lambda is `T.(ISqlExpressionBuilder) -> Op<Boolean>` (ISB is a
+      // parameter, not the receiver) so `column eq value` needs the ISB receiver scope re-opened.
+      LessonSteps.deleteWhere { isb -> isb.run { LessonSteps.lessonId eq PENGUIN_LESSON_ID } }
       insertAllPenguinStepsFromV2Catalog()
     }
   }

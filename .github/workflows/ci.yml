@@ -1,0 +1,67 @@
+name: CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  backend:
+    name: Backend (Ktor) — test + smoke /healthz
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Run unit tests
+        working-directory: backend
+        run: ./gradlew test --no-daemon --console=plain --stacktrace
+      - name: Boot server + curl /healthz
+        working-directory: backend
+        run: |
+          ./gradlew run --no-daemon --console=plain &
+          BOOT_PID=$!
+          for i in $(seq 1 30); do
+            if curl -fsS http://localhost:8080/healthz; then
+              echo "healthz ok"
+              kill $BOOT_PID
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "healthz never came up"
+          kill $BOOT_PID 2>/dev/null || true
+          exit 1
+
+  android:
+    name: Android — lint + assembleDebug
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Provide local.properties
+        run: |
+          mkdir -p android
+          cat > android/local.properties <<EOF
+          animal_art_studio_url=http://10.0.2.2:8080/
+          EOF
+      - name: Lint
+        working-directory: android
+        run: ./gradlew lint --no-daemon --console=plain --stacktrace
+      - name: Assemble debug
+        working-directory: android
+        run: ./gradlew assembleDebug --no-daemon --console=plain --stacktrace
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-debug.apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error

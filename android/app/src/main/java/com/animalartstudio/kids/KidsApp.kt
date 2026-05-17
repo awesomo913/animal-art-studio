@@ -2,31 +2,48 @@ package com.animalartstudio.kids
 
 import android.app.Application
 import android.provider.Settings
-import com.animalartstudio.kids.data.ClientCrashIngest
+import com.animalartstudio.kids.crash.CrashStore
+import com.animalartstudio.kids.data.ParentSettingsRepo
 import com.animalartstudio.kids.net.StudioApi
+import com.animalartstudio.kids.obs.Observability
 import com.animalartstudio.kids.util.RingLog
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withTimeoutOrNull
-import java.util.concurrent.atomic.AtomicReference
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 
 class KidsApp : Application() {
-  val log = RingLog()
-  lateinit var deviceId: String
-    private set
-  lateinit var api: StudioApi
-    private set
+
+  private lateinit var graph: DefaultAppGraph
 
   override fun onCreate() {
     super.onCreate()
-    Graph.attach(this)
-    deviceId = stableId()
-    val base = BuildConfig.ANIMAL_ART_STUDIO_URL
-    api = StudioApi(base, log)
+    val log = RingLog()
+    val api = StudioApi(BuildConfig.ANIMAL_ART_STUDIO_URL, log)
+    val crashStore = CrashStore(this)
+    val deviceId = stableId()
+    val parentSettings = ParentSettingsRepo(this)
+    graph = DefaultAppGraph(
+        api = api,
+        log = log,
+        deviceId = deviceId,
+        parentSettings = parentSettings,
+        crashStore = crashStore,
+    )
+    Graph.attach(graph)
+
+    // C-13 stub.
+    Observability.init(this, dsn = null /* read from BuildConfig once SDK is wired */)
+
+    // B-2: write to disk fast; upload on next launch.
     val previous = Thread.getDefaultUncaughtExceptionHandler()
     Thread.setDefaultUncaughtExceptionHandler { t, e ->
-      runCatching { persistAndUploadCrash(t, e) }
+      runCatching { crashStore.write(deviceId, log.snapshot(), t, e) }
       previous?.uncaughtException(t, e)
     }
+
+    // Background-drain any crashes from a prior session — fire-and-forget.
+    backgroundScope.launch { runCatching { crashStore.drainPending(api) } }
   }
 
   private fun stableId(): String {
@@ -40,33 +57,16 @@ class KidsApp : Application() {
     return id
   }
 
-  private fun persistAndUploadCrash(
-      t: Thread,
-      e: Throwable,
-  ) {
-    val stack = e.stackTraceToString().take(12_000)
-    val snap = log.snapshot()
-    val pay =
-        "thread=${t.name}\ntype=${e::class.java.name}\nmessage=${e.message}\n-----\n$stack"
-    runBlocking {
-      withTimeoutOrNull(1_500) {
-        runCatching {
-          api.sendCrash(
-              ClientCrashIngest(
-                  deviceId = deviceId,
-                  appVersion = BuildConfig.VERSION_NAME,
-                  payloadJson = "{}",
-                  recentLogLines = (listOf(pay) + snap).take(200)))
-        }
-      }
-    }
+  companion object {
+    private val backgroundScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
   }
 }
 
-object Graph {
-  private val ref = AtomicReference<KidsApp?>()
-  fun attach(app: KidsApp) {
-    ref.set(app)
-  }
-  fun get(): KidsApp = ref.get() ?: error("Application not ready")
-}
+/** Production [AppGraph] — built once in [KidsApp.onCreate]. */
+class DefaultAppGraph(
+    override val api: StudioApi,
+    override val log: RingLog,
+    override val deviceId: String,
+    override val parentSettings: ParentSettingsRepo,
+    override val crashStore: CrashStore,
+) : AppGraph

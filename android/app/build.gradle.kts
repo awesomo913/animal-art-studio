@@ -16,8 +16,8 @@ android {
     applicationId = "com.animalartstudio.kids"
     minSdk = 26
     targetSdk = 35
-    versionCode = 1
-    versionName = "0.1.0"
+    versionCode = 2
+    versionName = "0.2.0"
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     val p = project.rootProject.file("local.properties")
     val base =
@@ -62,6 +62,8 @@ dependencies {
   implementation("androidx.navigation:navigation-compose:2.8.3")
   implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
   implementation("com.squareup.okhttp3:okhttp:4.12.0")
+  // REVIEW_NOTES C-8: persisted parent settings.
+  implementation("androidx.datastore:datastore-preferences:1.1.1")
   debugImplementation("androidx.compose.ui:ui-tooling")
   testImplementation("junit:junit:4.13.2")
   androidTestImplementation("androidx.test.ext:junit:1.2.1")

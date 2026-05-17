@@ -24,7 +24,13 @@ dependencies {
     implementation("org.jetbrains.exposed:exposed-jdbc:0.55.0")
     implementation("com.h2database:h2:2.2.224")
     implementation("com.zaxxer:HikariCP:5.1.0")
+    // C-1: Postgres driver bundled so prod can flip DATABASE_URL=jdbc:postgresql://...
+    // without a build change. Drives DatabaseFactory.driverFor().
+    implementation("org.postgresql:postgresql:42.7.4")
+
     testImplementation(kotlin("test"))
+    testImplementation("org.jetbrains.kotlin:kotlin-test-junit5:2.0.21")
+    testImplementation("io.ktor:ktor-server-test-host:2.3.12")
 }
 
 application {

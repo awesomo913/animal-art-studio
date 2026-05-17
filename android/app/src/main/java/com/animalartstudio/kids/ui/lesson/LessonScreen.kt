@@ -215,7 +215,7 @@ fun LessonRoute(
                 onClick = {
                   view.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
                   val png = StrokesBitmap.toPngBase64(strokes, w, hgt, paperArgb)
-                  vm.submitPng(png) { res ->
+                  vm.submitPng(png, strokeCount = strokes.size) { res ->
                     val bmp = StrokesBitmap.toPreviewBitmap(strokes, w, hgt, 900, 900, paperArgb)
                     vm.rememberForCelebrate(bmp, res.animalKey, b.lesson.id)
                     if (res.bringToLifeUnlocked) {
@@ -242,48 +242,4 @@ fun LessonRoute(
   }
 }
 
-@Composable
-private fun CoachBubble(
-    star: StarShowUi,
-    res: FeedbackResponse,
-) {
-  val t = rememberInfiniteTransition(label = "bubble")
-  val pulse =
-      t.animateFloat(
-          0.99f,
-          1.01f,
-          animationSpec =
-              infiniteRepeatable(tween(900, easing = FastOutSlowInEasing), RepeatMode.Reverse),
-          label = "pulse",
-      )
-  val bg =
-      if (res.tone == "celebrate") {
-        MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.6f)
-      } else {
-        MaterialTheme.colorScheme.surface
-      }
-  val view = LocalView.current
-  LaunchedEffect(res.message, res.tone) {
-    if (res.tone == "celebrate") {
-      view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
-    }
-  }
-  Column(
-      Modifier
-          .padding(top = 10.dp)
-          .fillMaxWidth()
-          .clip(RoundedCornerShape(18.dp))
-          .background(bg)
-          .padding(14.dp)
-          .scale(pulse.value),
-  ) {
-    Text(
-        "${star.coachBubblePrefix} 💬",
-        fontWeight = FontWeight.Black,
-        color = MaterialTheme.colorScheme.primary,
-        style = MaterialTheme.typography.labelLarge,
-    )
-    Spacer(Modifier.height(4.dp))
-    Text(res.message, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
-  }
-}
+// CoachBubble extracted to CoachBubble.kt (REVIEW_NOTES C-11).

@@ -19,12 +19,14 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.EmojiEmotions
 import androidx.compose.material.icons.rounded.School
+import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -38,6 +40,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.animalartstudio.kids.data.LessonSummaryDto
@@ -56,6 +60,7 @@ fun HomeRoute(
     onOpenLesson: (String) -> Unit,
     onTutorial: () -> Unit,
     onHelp: () -> Unit,
+    onParentSettings: () -> Unit,
 ) {
   val app = Graph.get()
   var loading by remember { mutableStateOf(true) }
@@ -91,8 +96,19 @@ fun HomeRoute(
               AssistChip(
                   onClick = onTutorial,
                   label = { Text("How to play") },
-                  leadingIcon = { Icon(Icons.Rounded.School, contentDescription = null) },
+                  leadingIcon = {
+                    Icon(
+                        Icons.Rounded.School,
+                        contentDescription = "How-to-play tutorial",
+                    )
+                  },
               )
+              IconButton(onClick = onParentSettings) {
+                Icon(
+                    imageVector = Icons.Rounded.Settings,
+                    contentDescription = "Parent settings (grown-up check required)",
+                )
+              }
             },
         )
       },
@@ -118,8 +134,11 @@ fun HomeRoute(
         FilledTonalButton(onClick = onHelp) { Text("Help & troubleshoot") }
         Icon(
             imageVector = Icons.Rounded.Star,
+            // C-6: decorative-only icon — null contentDescription so TalkBack skips it.
             contentDescription = null,
-            modifier = Modifier.rotate(wiggle.value),
+            modifier = Modifier
+                .rotate(wiggle.value)
+                .semantics { contentDescription = "Decorative wiggling star" },
             tint = CoralHug,
         )
       }
@@ -162,6 +181,7 @@ private fun LessonCard(
                   shape = MaterialTheme.shapes.extraLarge,
               )
               .clickable { onOpenLesson() }
+              .semantics { contentDescription = "Open lesson ${l.title}, starring ${star.buddyName}, ${l.estMinutes} minutes" }
               .padding(18.dp),
       horizontalArrangement = Arrangement.SpaceBetween,
       verticalAlignment = Alignment.CenterVertically,
@@ -178,6 +198,11 @@ private fun LessonCard(
           fontWeight = FontWeight.SemiBold,
       )
     }
-    Icon(Icons.Rounded.EmojiEmotions, contentDescription = null, modifier = Modifier.padding(4.dp), tint = chip.second)
+    Icon(
+        Icons.Rounded.EmojiEmotions,
+        contentDescription = null,
+        modifier = Modifier.padding(4.dp),
+        tint = chip.second,
+    )
   }
 }

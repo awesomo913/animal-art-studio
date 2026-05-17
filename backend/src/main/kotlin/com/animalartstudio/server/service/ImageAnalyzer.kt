@@ -1,5 +1,7 @@
 package com.animalartstudio.server.service
 
+import com.animalartstudio.server.Constants.FAINT_INK_BOOST
+import com.animalartstudio.server.Constants.WHITE_CUTOFF
 import java.awt.image.BufferedImage
 import java.io.ByteArrayInputStream
 import java.util.Base64
@@ -13,7 +15,6 @@ data class ImageStats(
 )
 
 object ImageAnalyzer {
-  private const val WHITE_CUTOFF = 250
 
   fun fromBase64Png(b64: String): BufferedImage? {
     val clean =
@@ -29,8 +30,10 @@ object ImageAnalyzer {
   }
 
   /**
-   * Coverage = non-background ink ratio. We treat very light pixels as "paper" and count darker
-   * pixels as drawing. This is intentionally simple for a kid's MVP coach.
+   * Coverage = non-background ink ratio, with a small boost so faint kids' lines
+   * still register. See [FAINT_INK_BOOST] for the calibration contract — the
+   * seeded step bounds in [com.animalartstudio.server.db.PenguinContent] assume
+   * the boosted value.
    */
   fun stats(image: BufferedImage): ImageStats {
     var ink = 0L
@@ -47,9 +50,9 @@ object ImageAnalyzer {
         if (brightness < WHITE_CUTOFF) ink++
       }
     }
-    val c = if (total == 0L) 0.0 else ink.toDouble() / total.toDouble()
+    val rawRatio = if (total == 0L) 0.0 else ink.toDouble() / total.toDouble()
     return ImageStats(
-        coverage = min(1.0, c * 1.15), // light boost: kids often draw faintly
+        coverage = min(1.0, rawRatio * FAINT_INK_BOOST),
         width = w,
         height = h,
     )

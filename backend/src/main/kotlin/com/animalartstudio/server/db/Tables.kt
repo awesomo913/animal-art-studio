@@ -28,6 +28,10 @@ object LessonSteps : Table("lesson_steps") {
   val hintMore = text("hint_more")
   val hintAlmost = text("hint_almost")
   val celebrate = text("celebrate")
+
+  /** Anti-gaming floor: how many discrete strokes the client must report. 0 disables. */
+  val minStrokes = integer("min_strokes").default(0)
+
   override val primaryKey = PrimaryKey(id)
 }
 
@@ -35,7 +39,17 @@ object DrawingSessions : Table("drawing_sessions") {
   val id = varchar("id", 64)
   val lessonId = varchar("lesson_id", 64).references(Lessons.id)
   val deviceId = varchar("device_id", 128).default("")
+
+  /** Failures only. Drives the "coach gave a tip" framing in the UI. */
   val nudgeCount = integer("nudge_count").default(0)
+
+  /**
+   * Every submission counts as practice. Drives the "bring to life" magic-unlock
+   * gate so that a child who clears every step on the first try **still** earns
+   * the celebration after enough total tries. See bug B-1 in `docs/REVIEW_NOTES.md`.
+   */
+  val practiceAttempts = integer("practice_attempts").default(0)
+
   val highestStepCompleted = integer("highest_step_completed").default(-1)
   val createdAt = long("created_at")
   val updatedAt = long("updated_at")

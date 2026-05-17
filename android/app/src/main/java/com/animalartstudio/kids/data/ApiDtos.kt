@@ -22,6 +22,8 @@ data class LessonStepDto(
     val minCoverage: Double = 0.0,
     val maxCoverage: Double = 1.0,
     val colorHint: String? = null,
+    /** Anti-gaming floor — server-driven. 0 = off. See backend REVIEW_NOTES C-10. */
+    val minStrokes: Int = 0,
 )
 
 @Serializable
@@ -55,6 +57,8 @@ data class SessionResponse(
 data class SubmitStepRequest(
     val stepIndex: Int,
     val imageBase64: String,
+    /** Number of distinct strokes the user drew; defaults to 0 if not tracked. */
+    val strokeCount: Int = 0,
 )
 
 @Serializable
@@ -63,6 +67,8 @@ data class FeedbackResponse(
     val tone: String = "coach",
     val coverage: Double = 0.0,
     val nudgeCount: Int = 0,
+    /** Server-driven: every submit (pass or fail) increments this. Drives magic unlock. */
+    val practiceAttempts: Int = 0,
     val stepIndex: Int = 0,
     val stepPassed: Boolean = false,
     val stepComplete: Boolean = false,
