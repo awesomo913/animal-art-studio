@@ -33,6 +33,10 @@ fun AnimalHero(animalKey: String, modifier: Modifier = Modifier) {
   when (animalKey) {
     "cat" -> MimiCatHero(modifier)
     "dog" -> BiscuitDogHero(modifier)
+    "bunny" -> CottonBunnyHero(modifier)
+    "fish" -> BubblesFishHero(modifier)
+    "dino" -> ChompDinoHero(modifier)
+    "unicorn" -> SparkleUnicornHero(modifier)
     else -> WaddlesPenguinHero(modifier)
   }
 }

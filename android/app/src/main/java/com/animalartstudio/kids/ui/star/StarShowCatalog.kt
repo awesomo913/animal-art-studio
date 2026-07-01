@@ -118,6 +118,102 @@ private val dogShow =
         celebrateSfxLine = "Woof • pant • wag! (Add real sounds in res/raw when you're ready.)",
     )
 
+private val bunnyShow =
+    StarShowUi(
+        buddyName = "Cotton",
+        showTitle = "Cotton's Hop-Hop Show",
+        homeCardLine = "Starring Cotton — you're the co-star!",
+        stageLine = "Tonight's star: Cotton the bunny",
+        trickLabel = "Cotton's trick",
+        askBuddyButton = "Tell Cotton!",
+        coachBubblePrefix = "Cotton says",
+        paper = Color(0xFFFFF6EB),
+        gradientTop = Color(0xFFF1F0F7),
+        gradientBottom = Color(0xFFFFF0F5),
+        accent = Color(0xFFB57BA0),
+        inkChoices =
+            listOf(
+                Color(0xFF9AA0AC), // bunny grey
+                Color(0xFFFF9DB6), // ear/nose pink
+                Color(0xFF3A3E46), // soft charcoal
+            ),
+        celebrateTitle = "Hop-hop hooray! Cotton does a happy bounce!",
+        celebrateSub = "Your drawing stole the show — Cotton is bouncing with joy!",
+        celebrateSfxLine = "Hop • boing • wiggle! (Add real sounds in res/raw when you're ready.)",
+    )
+
+private val fishShow =
+    StarShowUi(
+        buddyName = "Bubbles",
+        showTitle = "Bubbles' Splish-Splash Show",
+        homeCardLine = "Starring Bubbles — you're the co-star!",
+        stageLine = "Tonight's star: Bubbles the fish",
+        trickLabel = "Bubbles' trick",
+        askBuddyButton = "Tell Bubbles!",
+        coachBubblePrefix = "Bubbles says",
+        paper = Color(0xFFFFF6EB),
+        gradientTop = Color(0xFFE6F5FF),
+        gradientBottom = Color(0xFFFFF4DE),
+        accent = Color(0xFF3B9BC4),
+        inkChoices =
+            listOf(
+                Color(0xFFF07B3F), // fish orange
+                Color(0xFFDE6A32), // deep orange
+                Color(0xFF4A9FD4), // water blue
+            ),
+        celebrateTitle = "Splish-splash! Bubbles blows a happy bubble!",
+        celebrateSub = "Your drawing made the whole tank sparkle — great swimming!",
+        celebrateSfxLine = "Blub • splash • pop! (Add real sounds in res/raw when you're ready.)",
+    )
+
+private val dinoShow =
+    StarShowUi(
+        buddyName = "Chomp",
+        showTitle = "Chomp's Stomp-Stomp Show",
+        homeCardLine = "Starring Chomp — you're the co-star!",
+        stageLine = "Tonight's star: Chomp the dinosaur",
+        trickLabel = "Chomp's trick",
+        askBuddyButton = "Tell Chomp!",
+        coachBubblePrefix = "Chomp says",
+        paper = Color(0xFFFFF6EB),
+        gradientTop = Color(0xFFEAF6DF),
+        gradientBottom = Color(0xFFFFF7E8),
+        accent = Color(0xFF5E9A4E),
+        inkChoices =
+            listOf(
+                Color(0xFF69A857), // dino green
+                Color(0xFF4E8A44), // deep green
+                Color(0xFF3A3E46), // soft charcoal
+            ),
+        celebrateTitle = "STOMP-STOMP! Chomp does a happy dino dance!",
+        celebrateSub = "Your drawing made Chomp roar with joy — best show ever!",
+        celebrateSfxLine = "Stomp • rawr • giggle! (Add real sounds in res/raw when you're ready.)",
+    )
+
+private val unicornShow =
+    StarShowUi(
+        buddyName = "Sparkle",
+        showTitle = "Sparkle's Rainbow Show",
+        homeCardLine = "Starring Sparkle — you're the co-star!",
+        stageLine = "Tonight's star: Sparkle the unicorn",
+        trickLabel = "Sparkle's trick",
+        askBuddyButton = "Tell Sparkle!",
+        coachBubblePrefix = "Sparkle says",
+        paper = Color(0xFFFFF6EB),
+        gradientTop = Color(0xFFF3EEFF),
+        gradientBottom = Color(0xFFFFEFF7),
+        accent = Color(0xFF9E7BC4),
+        inkChoices =
+            listOf(
+                Color(0xFFC3AEE3), // lavender
+                Color(0xFFFF8FC7), // mane pink
+                Color(0xFFF2C24B), // horn gold
+            ),
+        celebrateTitle = "Sparkle-sparkle! A rainbow swirls around Sparkle!",
+        celebrateSub = "Your drawing lit up the whole sky — pure magic!",
+        celebrateSfxLine = "Shimmer • neigh • twinkle! (Add real sounds in res/raw when you're ready.)",
+    )
+
 fun starShowForLesson(
     lessonId: String,
     animalKey: String,
@@ -126,11 +222,19 @@ fun starShowForLesson(
       "penguin" -> penguinShow
       "cat" -> catShow
       "dog" -> dogShow
+      "bunny" -> bunnyShow
+      "fish" -> fishShow
+      "dino" -> dinoShow
+      "unicorn" -> unicornShow
       else ->
           when (lessonId) {
             "penguin-happy" -> penguinShow
             "cat-happy" -> catShow
             "dog-happy" -> dogShow
+            "bunny-happy" -> bunnyShow
+            "fish-happy" -> fishShow
+            "dino-happy" -> dinoShow
+            "unicorn-happy" -> unicornShow
             else -> defaultShow
           }
     }

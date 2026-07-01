@@ -172,6 +172,10 @@ private fun LessonCard(
         "owl" -> "Hoo‑ray" to Forest
         "cat" -> "Purr" to SkyPop
         "dog" -> "Woof" to Forest
+        "bunny" -> "Hop" to CoralHug
+        "fish" -> "Glub" to SkyPop
+        "dino" -> "Stomp" to Forest
+        "unicorn" -> "Sparkle" to CoralHug
         else -> "Yay" to SkyPop
       }
   Row(

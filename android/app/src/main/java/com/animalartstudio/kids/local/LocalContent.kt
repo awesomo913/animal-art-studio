@@ -28,7 +28,11 @@ internal object LocalContent {
 
   const val CAT_LESSON_ID = "cat-happy"
   const val DOG_LESSON_ID = "dog-happy"
-  const val CONTENT_VERSION = 2
+  const val BUNNY_LESSON_ID = "bunny-happy"
+  const val FISH_LESSON_ID = "fish-happy"
+  const val DINO_LESSON_ID = "dino-happy"
+  const val UNICORN_LESSON_ID = "unicorn-happy"
+  const val CONTENT_VERSION = 3
   const val EST_MINUTES = 10
 
   val summaries: List<LessonSummaryDto> = listOf(
@@ -59,6 +63,42 @@ internal object LocalContent {
           estMinutes = EST_MINUTES,
           version = CONTENT_VERSION,
       ),
+      LessonSummaryDto(
+          id = BUNNY_LESSON_ID,
+          title = "Cotton's Hop-Hop Show",
+          subtitle = "You're the co-star — Cotton the bunny is tonight's star!",
+          animalKey = "bunny",
+          orderIndex = 3,
+          estMinutes = EST_MINUTES,
+          version = CONTENT_VERSION,
+      ),
+      LessonSummaryDto(
+          id = FISH_LESSON_ID,
+          title = "Bubbles' Splish-Splash Show",
+          subtitle = "You're the co-star — Bubbles the fish is tonight's star!",
+          animalKey = "fish",
+          orderIndex = 4,
+          estMinutes = EST_MINUTES,
+          version = CONTENT_VERSION,
+      ),
+      LessonSummaryDto(
+          id = DINO_LESSON_ID,
+          title = "Chomp's Stomp-Stomp Show",
+          subtitle = "You're the co-star — Chomp the dinosaur is tonight's star!",
+          animalKey = "dino",
+          orderIndex = 5,
+          estMinutes = EST_MINUTES,
+          version = CONTENT_VERSION,
+      ),
+      LessonSummaryDto(
+          id = UNICORN_LESSON_ID,
+          title = "Sparkle's Rainbow Show",
+          subtitle = "You're the co-star — Sparkle the unicorn is tonight's star!",
+          animalKey = "unicorn",
+          orderIndex = 6,
+          estMinutes = EST_MINUTES,
+          version = CONTENT_VERSION,
+      ),
   )
 
   /** Lesson lookup for the generalized (multi-animal) local content. */
@@ -67,6 +107,10 @@ internal object LocalContent {
         PENGUIN_LESSON_ID -> penguinDetail
         CAT_LESSON_ID -> catDetail
         DOG_LESSON_ID -> dogDetail
+        BUNNY_LESSON_ID -> bunnyDetail
+        FISH_LESSON_ID -> fishDetail
+        DINO_LESSON_ID -> dinoDetail
+        UNICORN_LESSON_ID -> unicornDetail
         else -> null
       }
 
@@ -75,6 +119,10 @@ internal object LocalContent {
         PENGUIN_LESSON_ID -> penguinStepHints
         CAT_LESSON_ID -> catStepHints
         DOG_LESSON_ID -> dogStepHints
+        BUNNY_LESSON_ID -> bunnyStepHints
+        FISH_LESSON_ID -> fishStepHints
+        DINO_LESSON_ID -> dinoStepHints
+        UNICORN_LESSON_ID -> unicornStepHints
         else -> emptyList()
       }
 
@@ -300,6 +348,180 @@ internal object LocalContent {
           "Make the tail a little bigger?",
           "Wag-almost — finish the curl!",
           "WAG-WAG! I'm ready for the show!"),
+  )
+
+  // ---- Bunny (body, ears, eyes, nose, tail) ---------------------------------
+  val bunnyDetail: LessonDetailDto = LessonDetailDto(
+      id = BUNNY_LESSON_ID,
+      title = "Cotton's Hop-Hop Show",
+      subtitle = "You're the co-star — Cotton the bunny is tonight's star!",
+      description = "Learn to draw Cotton from scratch — trace each dotted part and a whole hoppy bunny appears!",
+      animalKey = "bunny",
+      estMinutes = EST_MINUTES,
+      version = CONTENT_VERSION,
+      steps = listOf(
+          LessonStepDto(0, "Round tummy",
+              "Cotton wiggles: 'Start me with one big round body — soft as a cloud!'",
+              "Trace the big dotted circle — nice and slow.",
+              minCoverage = 0.03, maxCoverage = FULL, colorHint = "soft grey", minStrokes = 1),
+          LessonStepDto(1, "Tall ears",
+              "Cotton perks up: 'Two long floppy ears way up on top!'",
+              "Trace each tall dotted ear.",
+              minCoverage = 0.014, maxCoverage = FULL, colorHint = "candy pink", minStrokes = 1),
+          LessonStepDto(2, "Sweet eyes",
+              "Cotton blinks: 'Two shiny eyes so I can spot the carrots!'",
+              "Trace both little circles.",
+              minCoverage = 0.006, maxCoverage = FULL, colorHint = "soft charcoal", minStrokes = 1),
+          LessonStepDto(3, "Twitchy nose",
+              "Cotton sniffs: 'A tiny triangle nose — twitch twitch!'",
+              "Trace the little nose triangle.",
+              minCoverage = 0.005, maxCoverage = FULL, colorHint = "candy pink", minStrokes = 1),
+          LessonStepDto(4, "Puffy tail",
+              "Cotton hops: 'A round puffy tail on my side — boing!'",
+              "Trace the little dotted puff.",
+              minCoverage = 0.008, maxCoverage = FULL, colorHint = "soft grey", minStrokes = 1),
+      ),
+  )
+
+  // ---- Fish (body, tail, fin, eye, smile) -----------------------------------
+  val fishDetail: LessonDetailDto = LessonDetailDto(
+      id = FISH_LESSON_ID,
+      title = "Bubbles' Splish-Splash Show",
+      subtitle = "You're the co-star — Bubbles the fish is tonight's star!",
+      description = "Learn to draw Bubbles from scratch — trace each dotted part and a whole splashy fish appears!",
+      animalKey = "fish",
+      estMinutes = EST_MINUTES,
+      version = CONTENT_VERSION,
+      steps = listOf(
+          LessonStepDto(0, "Round body",
+              "Bubbles blubs: 'Draw me a big round body — glub glub!'",
+              "Trace the big dotted oval.",
+              minCoverage = 0.03, maxCoverage = FULL, colorHint = "sunny orange", minStrokes = 1),
+          LessonStepDto(1, "Swishy tail",
+              "Bubbles wiggles: 'A big fan tail at the back to swish!'",
+              "Trace the dotted triangle tail.",
+              minCoverage = 0.012, maxCoverage = FULL, colorHint = "deep orange", minStrokes = 1),
+          LessonStepDto(2, "Top fin",
+              "Bubbles flips: 'A little fin right on top of me!'",
+              "Trace the little dotted fin.",
+              minCoverage = 0.008, maxCoverage = FULL, colorHint = "deep orange", minStrokes = 1),
+          LessonStepDto(3, "Big eye",
+              "Bubbles peeks: 'One big round eye at the front!'",
+              "Trace the dotted circle.",
+              minCoverage = 0.006, maxCoverage = FULL, colorHint = "soft charcoal", minStrokes = 1),
+          LessonStepDto(4, "Happy smile",
+              "Bubbles grins: 'A little smile so I look glubby-happy!'",
+              "Trace the little smile curve.",
+              minCoverage = 0.005, maxCoverage = FULL, colorHint = "deep orange", minStrokes = 1),
+      ),
+  )
+
+  // ---- Dino (body, head, eye, spikes, tail, legs) ---------------------------
+  val dinoDetail: LessonDetailDto = LessonDetailDto(
+      id = DINO_LESSON_ID,
+      title = "Chomp's Stomp-Stomp Show",
+      subtitle = "You're the co-star — Chomp the dinosaur is tonight's star!",
+      description = "Learn to draw Chomp from scratch — trace each dotted part and a whole stompy dino appears!",
+      animalKey = "dino",
+      estMinutes = EST_MINUTES,
+      version = CONTENT_VERSION,
+      steps = listOf(
+          LessonStepDto(0, "Big body",
+              "Chomp rumbles: 'Draw me a big round body — RAWR (a friendly one)!'",
+              "Trace the big dotted oval.",
+              minCoverage = 0.03, maxCoverage = FULL, colorHint = "leafy green", minStrokes = 1),
+          LessonStepDto(1, "Round head",
+              "Chomp grins: 'A round head up front so I can smile!'",
+              "Trace the dotted circle up on the left.",
+              minCoverage = 0.02, maxCoverage = FULL, colorHint = "leafy green", minStrokes = 1),
+          LessonStepDto(2, "One eye",
+              "Chomp winks: 'One happy eye on my head!'",
+              "Trace the little dotted circle.",
+              minCoverage = 0.005, maxCoverage = FULL, colorHint = "soft charcoal", minStrokes = 1),
+          LessonStepDto(3, "Back spikes",
+              "Chomp puffs up: 'Three pointy spikes down my back — zig-zag!'",
+              "Trace each dotted triangle.",
+              minCoverage = 0.012, maxCoverage = FULL, colorHint = "deep green", minStrokes = 1),
+          LessonStepDto(4, "Long tail",
+              "Chomp swishes: 'A long swishy tail out the back!'",
+              "Trace the dotted tail curve.",
+              minCoverage = 0.012, maxCoverage = FULL, colorHint = "deep green", minStrokes = 1),
+          LessonStepDto(5, "Stompy legs",
+              "Chomp stomps: 'Two little stompy legs to stand on!'",
+              "Trace both little dotted legs.",
+              minCoverage = 0.008, maxCoverage = FULL, colorHint = "deep green", minStrokes = 1),
+      ),
+  )
+
+  // ---- Unicorn (body, horn, ears, eyes, mane, tail) -------------------------
+  val unicornDetail: LessonDetailDto = LessonDetailDto(
+      id = UNICORN_LESSON_ID,
+      title = "Sparkle's Rainbow Show",
+      subtitle = "You're the co-star — Sparkle the unicorn is tonight's star!",
+      description = "Learn to draw Sparkle from scratch — trace each dotted part and a whole magic unicorn appears!",
+      animalKey = "unicorn",
+      estMinutes = EST_MINUTES,
+      version = CONTENT_VERSION,
+      steps = listOf(
+          LessonStepDto(0, "Round body",
+              "Sparkle shimmers: 'Draw me a soft round body — sparkle sparkle!'",
+              "Trace the big dotted oval.",
+              minCoverage = 0.03, maxCoverage = FULL, colorHint = "soft lavender", minStrokes = 1),
+          LessonStepDto(1, "Magic horn",
+              "Sparkle glows: 'A tall pointy horn on top — that's my magic!'",
+              "Trace the dotted triangle up top.",
+              minCoverage = 0.008, maxCoverage = FULL, colorHint = "golden", minStrokes = 1),
+          LessonStepDto(2, "Little ears",
+              "Sparkle wiggles: 'Two little ears beside my horn!'",
+              "Trace each dotted ear.",
+              minCoverage = 0.008, maxCoverage = FULL, colorHint = "soft lavender", minStrokes = 1),
+          LessonStepDto(3, "Sparkly eyes",
+              "Sparkle blinks: 'Two sparkly eyes to see the rainbow!'",
+              "Trace both little circles.",
+              minCoverage = 0.006, maxCoverage = FULL, colorHint = "soft charcoal", minStrokes = 1),
+          LessonStepDto(4, "Swirly mane",
+              "Sparkle tosses: 'A swirly mane down my side — swish!'",
+              "Trace the dotted curls.",
+              minCoverage = 0.012, maxCoverage = FULL, colorHint = "rainbow pink", minStrokes = 1),
+          LessonStepDto(5, "Flowy tail",
+              "Sparkle swishes: 'A long flowy tail at the back!'",
+              "Trace the dotted tail curl.",
+              minCoverage = 0.012, maxCoverage = FULL, colorHint = "rainbow pink", minStrokes = 1),
+      ),
+  )
+
+  val bunnyStepHints: List<StepHints> = listOf(
+      StepHints("Trace the big dotted circle for my tummy!", "A little more around the tummy?", "So close — close up the circle!", "That tummy is so soft — thank you!"),
+      StepHints("Trace two tall ears up on top!", "One more tall ear for me?", "Almost — finish that ear!", "Tall ears — I can hear everything!"),
+      StepHints("Pop two shiny eyes on my face!", "One more eye, please!", "Nearly there — finish that eye!", "I can see the carrots now!"),
+      StepHints("Trace my tiny twitchy nose!", "A bit more on the nose!", "So close — one more nose line!", "Twitch twitch — cute nose!"),
+      StepHints("Trace my round puffy tail on the side!", "A little more puff?", "Tail-almost — close it up!", "Boing! Puffy tail done!"),
+  )
+
+  val fishStepHints: List<StepHints> = listOf(
+      StepHints("Trace the big dotted oval for my body!", "A little more around the body?", "So close — close up the oval!", "Glub glub — great body!"),
+      StepHints("Trace my big fan tail at the back!", "A bit more tail, please!", "Almost — finish the tail!", "Swish! Ready to swim!"),
+      StepHints("Trace the little fin on top!", "A bit more fin?", "So close — finish the fin!", "Fancy fin — yay!"),
+      StepHints("Trace my one big round eye!", "A little more on the eye!", "Nearly — close up the eye!", "I can see you now!"),
+      StepHints("Trace a little smile on my face!", "A bit more smile?", "Almost — finish the smile!", "Glubby-happy smile!"),
+  )
+
+  val dinoStepHints: List<StepHints> = listOf(
+      StepHints("Trace the big dotted oval for my body!", "A little more around the body?", "So close — close up the oval!", "Big friendly body — RAWR!"),
+      StepHints("Trace my round head up on the left!", "A bit more on the head?", "Almost — close up the head!", "What a happy head!"),
+      StepHints("Pop one happy eye on my head!", "A little more on the eye!", "Nearly — finish the eye!", "I can see the jungle!"),
+      StepHints("Trace three pointy spikes on my back!", "One more spike, please!", "So close — finish that spike!", "Spiky and cool!"),
+      StepHints("Trace my long swishy tail!", "Make the tail a bit longer?", "Tail-almost — finish the curve!", "Swish — mighty tail!"),
+      StepHints("Trace two little stompy legs!", "One more leg for me?", "Almost — finish that leg!", "STOMP STOMP — ready!"),
+  )
+
+  val unicornStepHints: List<StepHints> = listOf(
+      StepHints("Trace the big dotted oval for my body!", "A little more around the body?", "So close — close up the oval!", "Soft sparkly body — yay!"),
+      StepHints("Trace my tall magic horn on top!", "A bit more on the horn?", "So close — finish the horn tip!", "My magic horn shines!"),
+      StepHints("Trace two little ears by my horn!", "One more little ear?", "Almost — finish that ear!", "Cute little ears!"),
+      StepHints("Pop two sparkly eyes on my face!", "One more eye, please!", "Nearly — finish that eye!", "Sparkly eyes see the rainbow!"),
+      StepHints("Trace my swirly mane down the side!", "A bit more swirl?", "So close — finish the curls!", "Swish — magic mane!"),
+      StepHints("Trace my long flowy tail!", "A little more tail?", "Tail-almost — finish the curl!", "Flowy tail — off we go!"),
   )
 
   val help: List<HelpArticleDto> = listOf(
