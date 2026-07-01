@@ -51,8 +51,9 @@ import com.animalartstudio.kids.draw.StrokesBitmap
 import com.animalartstudio.kids.ui.LessonUi
 import com.animalartstudio.kids.ui.LessonViewModel
 import com.animalartstudio.kids.ui.draw.DoodleCanvas
+import com.animalartstudio.kids.ui.draw.blueprintFor
 import com.animalartstudio.kids.ui.star.StarShowUi
-import com.animalartstudio.kids.ui.star.heroes.WaddlesPenguinHero
+import com.animalartstudio.kids.ui.star.heroes.AnimalHero
 import com.animalartstudio.kids.ui.star.starShowForLesson
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -95,17 +96,15 @@ fun LessonRoute(
       var w by remember { mutableFloatStateOf(1f) }
       var hgt by remember { mutableFloatStateOf(1f) }
       val inkOpts = star.inkChoices
-      var idx by remember(lessonId, b.stepIndex) { mutableStateOf(0) }
-      var ink by remember(lessonId, b.stepIndex) { mutableStateOf(inkOpts[0]) }
-      var strokes by remember(lessonId, b.stepIndex) { mutableStateOf(listOf<InkStroke>()) }
-      var clearSalt by remember(lessonId, b.stepIndex) { mutableStateOf(0) }
+      // The animal's ordered "answer key" — the dotted parts the kid traces.
+      val blueprint = remember(b.lesson.animalKey) { blueprintFor(b.lesson.animalKey) }
+      // These persist across STEPS within a lesson so the drawing accumulates;
+      // they reset only when the lesson (lessonId) changes.
+      var idx by remember(lessonId) { mutableStateOf(0) }
+      var ink by remember(lessonId) { mutableStateOf(inkOpts[0]) }
+      var strokes by remember(lessonId) { mutableStateOf(listOf<InkStroke>()) }
+      var startOver by remember(lessonId) { mutableStateOf(0) }
       val paperArgb = star.paper.toArgb()
-      LaunchedEffect(lessonId, b.stepIndex) {
-        idx = 0
-        ink = inkOpts.getOrElse(0) { Color.Black }
-        strokes = emptyList()
-        clearSalt = 0
-      }
       val scroll = rememberScrollState()
       Column(
           modifier =
@@ -143,12 +142,10 @@ fun LessonRoute(
             ) {
               Text(star.stageLine, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant)
               Spacer(Modifier.height(4.dp))
-              if (b.lesson.animalKey == "penguin") {
-                WaddlesPenguinHero(modifier = Modifier.fillMaxWidth())
-              }
+              AnimalHero(b.lesson.animalKey, modifier = Modifier.fillMaxWidth())
               Spacer(Modifier.height(8.dp))
               Text(
-                  "ROUND ${b.stepIndex + 1} · ${b.step.title}",
+                  "Part ${b.stepIndex + 1} of ${b.lesson.steps.size} · ${b.step.title}",
                   style = MaterialTheme.typography.titleMedium,
                   fontWeight = FontWeight.Black,
               )
@@ -191,7 +188,10 @@ fun LessonRoute(
                 paper = star.paper,
                 ink = ink,
                 strokeWidth = 9f,
-                stepKey = b.stepIndex * 1_000_000 + clearSalt,
+                demoKey = lessonId.hashCode() + b.stepIndex,
+                clearKey = lessonId.hashCode() + startOver,
+                blueprint = blueprint,
+                featureIndex = b.stepIndex,
                 onSize = { ww, hh ->
                   w = ww
                   hgt = hh
@@ -210,7 +210,7 @@ fun LessonRoute(
           }
           Spacer(Modifier.height(8.dp))
           Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            FilledTonalButton(onClick = { clearSalt++; strokes = emptyList() }) { Text("Clear this round") }
+            FilledTonalButton(onClick = { startOver++; strokes = emptyList() }) { Text("Start over") }
             Button(
                 onClick = {
                   view.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)

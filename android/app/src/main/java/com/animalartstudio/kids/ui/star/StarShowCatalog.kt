@@ -70,15 +70,67 @@ private val defaultShow =
         celebrateSfxLine = "Happy sounds go here.",
     )
 
+private val catShow =
+    StarShowUi(
+        buddyName = "Mimi",
+        showTitle = "Mimi's Purr Parade",
+        homeCardLine = "Starring Mimi — you're the co-star!",
+        stageLine = "Tonight's star: Mimi the kitten",
+        trickLabel = "Mimi's trick",
+        askBuddyButton = "Tell Mimi!",
+        coachBubblePrefix = "Mimi says",
+        paper = Color(0xFFFFF6EB),
+        gradientTop = Color(0xFFF3EEFF),
+        gradientBottom = Color(0xFFFFF0F5),
+        accent = Color(0xFF8A6FB0),
+        inkChoices =
+            listOf(
+                Color(0xFF7C838F), // cat grey
+                Color(0xFFFF8FB0), // nose pink
+                Color(0xFF6A4CFF), // playful purple
+            ),
+        celebrateTitle = "Purr-fect! Mimi does a happy parade wiggle!",
+        celebrateSub = "Your drawing stole the show — Mimi is purring with joy!",
+        celebrateSfxLine = "Purr • mew • swish! (Add real sounds in res/raw when you're ready.)",
+    )
+
+private val dogShow =
+    StarShowUi(
+        buddyName = "Biscuit",
+        showTitle = "Biscuit's Waggy Show",
+        homeCardLine = "Starring Biscuit — you're the co-star!",
+        stageLine = "Tonight's star: Biscuit the puppy",
+        trickLabel = "Biscuit's trick",
+        askBuddyButton = "Tell Biscuit!",
+        coachBubblePrefix = "Biscuit says",
+        paper = Color(0xFFFFF6EB),
+        gradientTop = Color(0xFFFFF1E0),
+        gradientBottom = Color(0xFFFFF7E8),
+        accent = Color(0xFFB07B4A),
+        inkChoices =
+            listOf(
+                Color(0xFF9A5F30), // dog brown
+                Color(0xFF3A2A22), // nose dark
+                Color(0xFFFF8A5B), // waggy orange
+            ),
+        celebrateTitle = "WAG-WAG! Biscuit spins with happy zoomies!",
+        celebrateSub = "Your drawing made Biscuit's whole tail wag — best show ever!",
+        celebrateSfxLine = "Woof • pant • wag! (Add real sounds in res/raw when you're ready.)",
+    )
+
 fun starShowForLesson(
     lessonId: String,
     animalKey: String,
 ): StarShowUi =
-    when (lessonId) {
-      "penguin-happy" -> penguinShow
+    when (animalKey) {
+      "penguin" -> penguinShow
+      "cat" -> catShow
+      "dog" -> dogShow
       else ->
-          when (animalKey) {
-            "penguin" -> penguinShow
+          when (lessonId) {
+            "penguin-happy" -> penguinShow
+            "cat-happy" -> catShow
+            "dog-happy" -> dogShow
             else -> defaultShow
           }
     }

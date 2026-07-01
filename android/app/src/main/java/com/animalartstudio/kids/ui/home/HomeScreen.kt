@@ -170,6 +170,8 @@ private fun LessonCard(
       when (l.animalKey) {
         "penguin" -> "Waddle" to SkyPop
         "owl" -> "Hoo‑ray" to Forest
+        "cat" -> "Purr" to SkyPop
+        "dog" -> "Woof" to Forest
         else -> "Yay" to SkyPop
       }
   Row(

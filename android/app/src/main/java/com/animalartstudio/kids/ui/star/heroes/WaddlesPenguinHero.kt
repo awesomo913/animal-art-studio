@@ -78,6 +78,9 @@ fun WaddlesPenguinHero(modifier: Modifier = Modifier) {
       drawCircle(Color.White, er + 2.5f, center = Offset(wx + sep, eyeY))
       drawCircle(Color(0xFF1F2228), er * 0.55f, center = Offset(wx - sep + 1.4f, eyeY + 1.5f))
       drawCircle(Color(0xFF1F2228), er * 0.55f, center = Offset(wx + sep + 1.4f, eyeY + 1.5f))
+      // sparkle highlights
+      drawCircle(Color.White, er * 0.22f, center = Offset(wx - sep - er * 0.15f, eyeY - er * 0.2f))
+      drawCircle(Color.White, er * 0.22f, center = Offset(wx + sep - er * 0.15f, eyeY - er * 0.2f))
 
       val beak =
           Path().apply {

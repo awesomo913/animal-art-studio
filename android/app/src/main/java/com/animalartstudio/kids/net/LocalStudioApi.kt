@@ -38,6 +38,10 @@ class LocalStudioApi(
       var nudgeCount: Int = 0,
       var practiceAttempts: Int = 0,
       var highestStepCompleted: Int = -1,
+      // Running totals of the cumulative drawing at the last PASSED step. Each
+      // step is judged on how much the child added ON TOP of these.
+      var baselineCoverage: Double = 0.0,
+      var baselineStrokeCount: Int = 0,
   )
 
   private val sessions = ConcurrentHashMap<String, State>()
@@ -49,16 +53,13 @@ class LocalStudioApi(
 
   override suspend fun getLesson(id: String): LessonDetailDto {
     log.append("local getLesson $id")
-    return when (id) {
-      LocalContent.PENGUIN_LESSON_ID -> LocalContent.penguinDetail
-      else -> throw ApiException(404, "lesson_not_found", "no such lesson: $id")
-    }
+    return LocalContent.detailFor(id)
+        ?: throw ApiException(404, "lesson_not_found", "no such lesson: $id")
   }
 
   override suspend fun createSession(body: CreateSessionRequest): SessionResponse {
-    if (body.lessonId != LocalContent.PENGUIN_LESSON_ID) {
-      throw ApiException(404, "lesson_not_found", "no such lesson: ${body.lessonId}")
-    }
+    val lesson = LocalContent.detailFor(body.lessonId)
+        ?: throw ApiException(404, "lesson_not_found", "no such lesson: ${body.lessonId}")
     val id = "sess_" + UUID.randomUUID().toString().replace("-", "")
     sessions[id] = State(body.lessonId)
     log.append("local createSession $id")
@@ -67,7 +68,7 @@ class LocalStudioApi(
         lessonId = body.lessonId,
         nudgeCount = 0,
         highestStepCompleted = -1,
-        version = LocalContent.PENGUIN_VERSION,
+        version = lesson.version,
     )
   }
 
@@ -77,7 +78,8 @@ class LocalStudioApi(
   ): FeedbackResponse = withContext(Dispatchers.Default) {
     val state = sessions[sessionId]
         ?: throw ApiException(400, "invalid_session_or_image_or_step", "unknown session")
-    val lesson = LocalContent.penguinDetail
+    val lesson = LocalContent.detailFor(state.lessonId)
+        ?: throw ApiException(400, "invalid_session_or_image_or_step", "unknown lesson")
     val maxIndex = lesson.steps.maxOf { it.index }
     if (body.stepIndex < 0 || body.stepIndex > maxIndex) {
       throw ApiException(400, "invalid_session_or_image_or_step", "bad stepIndex")
@@ -91,15 +93,40 @@ class LocalStudioApi(
         ?: throw ApiException(400, "invalid_session_or_image_or_step", "bad PNG")
     val stats = OnDeviceImageAnalyzer.stats(bmp)
 
-    val strokesOk = step.minStrokes == 0 || body.strokeCount >= step.minStrokes
-    val passed = stats.coverage in step.minCoverage..step.maxCoverage && strokesOk
+    // "Start over" wipes the child's canvas, so strokeCount drops below the
+    // running baseline. Detect that and rebaseline to zero — otherwise the delta
+    // goes negative, clamps to 0, and the current step becomes impossible to pass
+    // (a softlock). See REVIEW: silent-failure scan 2026-07-01.
+    if (body.strokeCount < state.baselineStrokeCount) {
+      log.append("local rebaseline: canvas cleared (strokes ${body.strokeCount} < ${state.baselineStrokeCount})")
+      state.baselineStrokeCount = 0
+      state.baselineCoverage = 0.0
+    }
+
+    // Cumulative canvas: judge what the child added THIS step (delta from the
+    // running baseline), never absolute coverage — a growing drawing can't blow
+    // past a ceiling and softlock. `minCoverage` = per-feature delta floor,
+    // `minStrokes` = delta stroke count. There is deliberately no upper bound.
+    val deltaCoverage = (stats.coverage - state.baselineCoverage).coerceAtLeast(0.0)
+    val deltaStrokes = (body.strokeCount - state.baselineStrokeCount).coerceAtLeast(0)
+    val strokesOk = step.minStrokes == 0 || deltaStrokes >= step.minStrokes
+    val drewEnough = deltaCoverage >= step.minCoverage
+    val passed = drewEnough && strokesOk
+    log.append(
+        "local submit step=${body.stepIndex} cov=${stats.coverage} base=${state.baselineCoverage} " +
+            "dCov=$deltaCoverage dStk=$deltaStrokes need=${step.minCoverage}/${step.minStrokes} passed=$passed")
 
     state.practiceAttempts += 1
     if (!passed) state.nudgeCount += 1
-    if (passed) state.highestStepCompleted = maxOf(state.highestStepCompleted, body.stepIndex)
+    if (passed) {
+      state.highestStepCompleted = maxOf(state.highestStepCompleted, body.stepIndex)
+      state.baselineCoverage = stats.coverage
+      state.baselineStrokeCount = body.strokeCount
+    }
 
     val isLast = body.stepIndex == maxIndex
-    val (message, tone) = feedbackCopy(step, stats.coverage, passed, isLast, strokesOk)
+    val (message, tone) =
+        feedbackCopy(step, deltaCoverage, passed, isLast, strokesOk, LocalContent.stepHintsFor(state.lessonId))
     val bringUnlocked = passed && isLast && state.practiceAttempts >= nudgesForMagic
     val lessonComplete = passed && isLast
     val next = if (passed && !isLast) body.stepIndex + 1 else body.stepIndex
@@ -134,12 +161,13 @@ class LocalStudioApi(
 
   private fun feedbackCopy(
       step: LessonStepDto,
-      coverage: Double,
+      deltaCoverage: Double,
       passed: Boolean,
       isLast: Boolean,
       strokesOk: Boolean,
+      stepHints: List<LocalContent.StepHints>,
   ): Pair<String, String> {
-    val hints = LocalContent.penguinStepHints.getOrNull(step.index)
+    val hints = stepHints.getOrNull(step.index)
     if (passed) {
       val msg = if (isLast) "You did it! What a great drawing!" else (hints?.celebrate ?: "Nice!")
       return msg to "celebrate"
@@ -147,8 +175,8 @@ class LocalStudioApi(
     if (!strokesOk) {
       return "A few more separate strokes would help — try lifting your finger between marks!" to "coach"
     }
-    if (coverage < 0.02) return (hints?.hintEmpty ?: "Let's add some lines!") to "coach"
-    if (coverage < step.minCoverage) return (hints?.hintMore ?: "A little more, please!") to "coach"
+    if (deltaCoverage < 0.002) return (hints?.hintEmpty ?: "Let's add some lines!") to "coach"
+    if (deltaCoverage < step.minCoverage) return (hints?.hintMore ?: "A little more, please!") to "coach"
     return (hints?.hintAlmost ?: "So close!") to "coach"
   }
 

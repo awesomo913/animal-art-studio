@@ -9,14 +9,27 @@ import com.animalartstudio.kids.data.LessonSummaryDto
  * Mirrors `backend/.../db/PenguinContent.kt` + `service/HelpCatalog.kt` so the
  * self-contained APK doesn't need to hit the API for lesson definitions.
  *
- * When new content lands server-side, port it here too — or wire a small
- * remote-content fallback later.
+ * Each lesson now teaches the animal **feature by feature, from scratch** — one
+ * step per traceable part. The step list here MUST line up 1:1 (same order and
+ * count) with the feature list in `ui/draw/Blueprints.kt`: step N teaches
+ * feature N, and the dotted guide the kid traces IS that feature.
+ *
+ * Gating note: with the cumulative canvas, `minCoverage` is read by
+ * [com.animalartstudio.kids.net.LocalStudioApi] as a *per-feature delta floor*
+ * (how much NEW ink this step needs), and `minStrokes` as a *delta* stroke
+ * count. There is no upper coverage ceiling, so the growing drawing never
+ * softlocks. `maxCoverage` is retained for the DTO but unused by the gate.
  */
 internal object LocalContent {
 
   const val PENGUIN_LESSON_ID = "penguin-happy"
-  const val PENGUIN_VERSION = 2
+  const val PENGUIN_VERSION = 3
   const val PENGUIN_EST_MINUTES = 10
+
+  const val CAT_LESSON_ID = "cat-happy"
+  const val DOG_LESSON_ID = "dog-happy"
+  const val CONTENT_VERSION = 2
+  const val EST_MINUTES = 10
 
   val summaries: List<LessonSummaryDto> = listOf(
       LessonSummaryDto(
@@ -28,49 +41,81 @@ internal object LocalContent {
           estMinutes = PENGUIN_EST_MINUTES,
           version = PENGUIN_VERSION,
       ),
+      LessonSummaryDto(
+          id = CAT_LESSON_ID,
+          title = "Mimi's Purr Parade",
+          subtitle = "You're the co-star — Mimi the kitten is tonight's star!",
+          animalKey = "cat",
+          orderIndex = 1,
+          estMinutes = EST_MINUTES,
+          version = CONTENT_VERSION,
+      ),
+      LessonSummaryDto(
+          id = DOG_LESSON_ID,
+          title = "Biscuit's Waggy Show",
+          subtitle = "You're the co-star — Biscuit the puppy is tonight's star!",
+          animalKey = "dog",
+          orderIndex = 2,
+          estMinutes = EST_MINUTES,
+          version = CONTENT_VERSION,
+      ),
   )
 
+  /** Lesson lookup for the generalized (multi-animal) local content. */
+  fun detailFor(id: String): LessonDetailDto? =
+      when (id) {
+        PENGUIN_LESSON_ID -> penguinDetail
+        CAT_LESSON_ID -> catDetail
+        DOG_LESSON_ID -> dogDetail
+        else -> null
+      }
+
+  fun stepHintsFor(id: String): List<StepHints> =
+      when (id) {
+        PENGUIN_LESSON_ID -> penguinStepHints
+        CAT_LESSON_ID -> catStepHints
+        DOG_LESSON_ID -> dogStepHints
+        else -> emptyList()
+      }
+
+  private const val FULL = 1.0
+
+  // ---- Penguin (feature order: body, belly, eyes, beak, feet, wings) --------
   val penguinDetail: LessonDetailDto = LessonDetailDto(
       id = PENGUIN_LESSON_ID,
       title = "Waddles' Splashy Show",
       subtitle = "You're the co-star — Waddles the penguin is tonight's star!",
       description =
-          "Tonight Waddles is putting on a tiny show — you help paint the snowy belly, the grin, " +
-              "and the splashy flippers. No rush: art is play!",
+          "Tonight you learn to draw Waddles from scratch — trace each dotted part and watch a " +
+              "whole penguin appear. No rush: art is play!",
       animalKey = "penguin",
       estMinutes = PENGUIN_EST_MINUTES,
       version = PENGUIN_VERSION,
       steps = listOf(
-          LessonStepDto(
-              index = 0,
-              title = "Snowy tummy",
-              instruction = "Waddles whispers: 'Pssst — paint me one big cuddly tummy in the middle, like a soft snow pillow!'",
-              technique = "Wobbly oval first: light lines, then go a little bolder!",
-              minCoverage = 0.05,
-              maxCoverage = 0.80,
-              colorHint = "inky blue or soft charcoal",
-              minStrokes = 1,
-          ),
-          LessonStepDto(
-              index = 1,
-              title = "Grin & beak blink",
-              instruction = "Waddles giggles: 'Two tiny bumps for sleepy eyes… then a wee orange wedge for my happy beak!'",
-              technique = "Dot-dot-triangle: eyes spaced like two peas, tiny mountain for the beak.",
-              minCoverage = 0.06,
-              maxCoverage = 0.78,
-              colorHint = "sunset orange",
-              minStrokes = 3,
-          ),
-          LessonStepDto(
-              index = 2,
-              title = "Tiny flipper high-fives",
-              instruction = "Waddles splashes: 'Slide two slidey fins on each side — we are going SPLASH-dancing!'",
-              technique = "Curvy raindrops — thin ends, chunky middles!",
-              minCoverage = 0.08,
-              maxCoverage = 0.82,
-              colorHint = "ocean ink",
-              minStrokes = 2,
-          ),
+          LessonStepDto(0, "Round tummy",
+              "Waddles whispers: 'Start me with one big round body in the middle — like a soft snow egg!'",
+              "Trace the dotted egg — go slow, right on the dots.",
+              minCoverage = 0.03, maxCoverage = FULL, colorHint = "inky blue", minStrokes = 1),
+          LessonStepDto(1, "Snowy belly",
+              "Waddles giggles: 'Now a smaller tummy patch INSIDE — that's my fuzzy white belly!'",
+              "Trace the little oval inside the body.",
+              minCoverage = 0.018, maxCoverage = FULL, colorHint = "soft blue", minStrokes = 1),
+          LessonStepDto(2, "Two happy eyes",
+              "Waddles blinks: 'Two little dot-eyes up high so I can watch the show!'",
+              "Trace both tiny circles up top.",
+              minCoverage = 0.006, maxCoverage = FULL, colorHint = "inky blue", minStrokes = 1),
+          LessonStepDto(3, "Sunny beak",
+              "Waddles beams: 'A tiny orange triangle under my eyes — that's my happy beak!'",
+              "Trace the little mountain shape.",
+              minCoverage = 0.006, maxCoverage = FULL, colorHint = "sunset orange", minStrokes = 1),
+          LessonStepDto(4, "Splashy feet",
+              "Waddles wiggles: 'Two little flippy feet at the bottom — ready to SPLASH!'",
+              "Trace both little ovals along the bottom.",
+              minCoverage = 0.008, maxCoverage = FULL, colorHint = "sunset orange", minStrokes = 1),
+          LessonStepDto(5, "Waving wings",
+              "Waddles cheers: 'Two curvy wings on my sides for a big hello wave!'",
+              "Trace the curve down each side.",
+              minCoverage = 0.012, maxCoverage = FULL, colorHint = "splash blue", minStrokes = 1),
       ),
   )
 
@@ -83,24 +128,178 @@ internal object LocalContent {
 
   /** Per-step coach hints (not part of the public step DTO — local-only). */
   val penguinStepHints: List<StepHints> = listOf(
-      StepHints(
-          hintEmpty = "Hm, I'm still sleepy — scribble one big tummy egg right here for me?",
-          hintMore = "A little more fluff on the tummy would make me sparkle!",
-          hintAlmost = "Ooh, so cozy! Tiny wiggle if the oval feels squarish?",
-          celebrate = "That tummy looks snack-ready — thank you!",
+      StepHints("Trace the big dotted egg for my tummy — right on the dots!",
+          "A little more along the tummy dots?",
+          "So close — follow the last of the dots!",
+          "That tummy looks snack-ready — thank you!"),
+      StepHints("Trace the little oval inside for my fuzzy belly!",
+          "A bit more of the belly patch, please!",
+          "Almost — close up the belly oval!",
+          "So fluffy! My belly is perfect!"),
+      StepHints("Pop two little dots up high for my eyes!",
+          "One more little eye for me?",
+          "Nearly there — finish that eye!",
+          "Peekaboo! I can see you now!"),
+      StepHints("Trace the tiny triangle for my beak!",
+          "A little more on the beak!",
+          "So close — one more beak line!",
+          "What a sunny beak — thank you!"),
+      StepHints("Trace two little feet along the bottom!",
+          "One more flippy foot?",
+          "Almost — finish that foot!",
+          "SPLASH-ready feet! Yay!"),
+      StepHints("Trace a curvy wing down each side!",
+          "A little more wing, please!",
+          "So close — finish the wave!",
+          "Big hello wave — I'm ready for the show!"),
+  )
+
+  // ---- Cat (body, ears, eyes, nose, smile, whiskers, tail) ------------------
+  val catDetail: LessonDetailDto = LessonDetailDto(
+      id = CAT_LESSON_ID,
+      title = "Mimi's Purr Parade",
+      subtitle = "You're the co-star — Mimi the kitten is tonight's star!",
+      description =
+          "Learn to draw Mimi from scratch — trace each dotted part and a whole smiley kitten " +
+              "appears. Take your time!",
+      animalKey = "cat",
+      estMinutes = EST_MINUTES,
+      version = CONTENT_VERSION,
+      steps = listOf(
+          LessonStepDto(0, "Round tummy",
+              "Mimi purrs: 'Draw me a soft round body in the middle — like a warm little bun!'",
+              "Trace the big dotted circle — nice and slow.",
+              minCoverage = 0.03, maxCoverage = FULL, colorHint = "cozy grey", minStrokes = 1),
+          LessonStepDto(1, "Pointy ears",
+              "Mimi wiggles: 'Two pointy triangle ears up on top!'",
+              "Trace each little triangle up top.",
+              minCoverage = 0.014, maxCoverage = FULL, colorHint = "cozy grey", minStrokes = 1),
+          LessonStepDto(2, "Sweet eyes",
+              "Mimi blinks: 'Two round eyes so I can see my parade!'",
+              "Trace both little circles.",
+              minCoverage = 0.006, maxCoverage = FULL, colorHint = "soft charcoal", minStrokes = 1),
+          LessonStepDto(3, "Tiny nose",
+              "Mimi sniffs: 'A tiny triangle nose right in the middle!'",
+              "Trace the little nose triangle.",
+              minCoverage = 0.005, maxCoverage = FULL, colorHint = "candy pink", minStrokes = 1),
+          LessonStepDto(4, "Happy smile",
+              "Mimi grins: 'A little curvy smile under my nose!'",
+              "Trace the two little smile curves.",
+              minCoverage = 0.005, maxCoverage = FULL, colorHint = "soft charcoal", minStrokes = 1),
+          LessonStepDto(5, "Whiskers",
+              "Mimi twitches: 'Little whisker lines out each cheek — tickle tickle!'",
+              "Trace the little lines on both sides.",
+              minCoverage = 0.004, maxCoverage = FULL, colorHint = "cozy grey", minStrokes = 1),
+          LessonStepDto(6, "Swishy tail",
+              "Mimi swishes: 'One long curvy tail off to the side — make it dance!'",
+              "Trace the long curl of the tail.",
+              minCoverage = 0.012, maxCoverage = FULL, colorHint = "cozy grey", minStrokes = 1),
       ),
-      StepHints(
-          hintEmpty = "I need helpers to place my grin — two dots above, one tiny wedge under!",
-          hintMore = "My face likes a few more giggly lines!",
-          hintAlmost = "So close — smidge clearer on my beaky smile?",
-          celebrate = "Peekaboo grin! I already love it!",
+  )
+
+  // ---- Dog (body, ears, eyes, nose, smile, tongue, tail) --------------------
+  val dogDetail: LessonDetailDto = LessonDetailDto(
+      id = DOG_LESSON_ID,
+      title = "Biscuit's Waggy Show",
+      subtitle = "You're the co-star — Biscuit the puppy is tonight's star!",
+      description =
+          "Learn to draw Biscuit from scratch — trace each dotted part and a whole waggy puppy " +
+              "appears. No rush — just have fun!",
+      animalKey = "dog",
+      estMinutes = EST_MINUTES,
+      version = CONTENT_VERSION,
+      steps = listOf(
+          LessonStepDto(0, "Cuddly body",
+              "Biscuit woofs: 'Paint me a big cuddly body in the middle — nice and huggable!'",
+              "Trace the big dotted oval — slow and steady.",
+              minCoverage = 0.03, maxCoverage = FULL, colorHint = "warm brown", minStrokes = 1),
+          LessonStepDto(1, "Floppy ears",
+              "Biscuit flops: 'Two long floppy ears hanging down each side!'",
+              "Trace each long droopy ear.",
+              minCoverage = 0.014, maxCoverage = FULL, colorHint = "chocolate brown", minStrokes = 1),
+          LessonStepDto(2, "Happy eyes",
+              "Biscuit blinks: 'Two happy eyes so I can see you!'",
+              "Trace both little circles.",
+              minCoverage = 0.006, maxCoverage = FULL, colorHint = "dark brown", minStrokes = 1),
+          LessonStepDto(3, "Boop nose",
+              "Biscuit sniffs: 'A round boop-nose in the middle!'",
+              "Trace the little nose oval.",
+              minCoverage = 0.006, maxCoverage = FULL, colorHint = "dark brown", minStrokes = 1),
+          LessonStepDto(4, "Big smile",
+              "Biscuit pants: 'A big happy smile under my nose!'",
+              "Trace the wide smile curve.",
+              minCoverage = 0.005, maxCoverage = FULL, colorHint = "warm brown", minStrokes = 1),
+          LessonStepDto(5, "Silly tongue",
+              "Biscuit slurps: 'A little tongue peeking out — bleh!'",
+              "Trace the little tongue shape.",
+              minCoverage = 0.005, maxCoverage = FULL, colorHint = "puppy pink", minStrokes = 1),
+          LessonStepDto(6, "Waggy tail",
+              "Biscuit wiggles: 'A curvy tail out the back — wag-wag-WAG!'",
+              "Trace the happy curl of the tail.",
+              minCoverage = 0.012, maxCoverage = FULL, colorHint = "warm brown", minStrokes = 1),
       ),
-      StepHints(
-          hintEmpty = "Paddle-paddle here — gentle curves hugging left and right of my belly!",
-          hintMore = "A few bolder curves for swimming power?",
-          hintAlmost = "Flipper-almost! Tiny bit more pizzazz on one side?",
-          celebrate = "HIGH-FIN! I'm ready for the curtain call!",
-      ),
+  )
+
+  val catStepHints: List<StepHints> = listOf(
+      StepHints("Trace the big dotted circle for my tummy!",
+          "A little more around the tummy?",
+          "So close — close up the circle!",
+          "That tummy is purr-fect for a nap!"),
+      StepHints("Trace two pointy ears up on top!",
+          "One more pointy ear for me?",
+          "Almost — finish that ear point!",
+          "Pointy ears — I hear everything now!"),
+      StepHints("Pop two round eyes on my face!",
+          "One more eye, please!",
+          "Nearly there — finish that eye!",
+          "Meow! I can see my parade!"),
+      StepHints("Trace the tiny nose triangle!",
+          "A bit more on the nose!",
+          "So close — one more nose line!",
+          "Boop! What a cute nose!"),
+      StepHints("Trace a little smile under my nose!",
+          "A bit more smile, please!",
+          "Almost — finish the smile curve!",
+          "Purr — I love my smile!"),
+      StepHints("Trace little whisker lines out each cheek!",
+          "A few more whisker tickles?",
+          "So close — one more whisker!",
+          "Tickle-tickle whiskers — yay!"),
+      StepHints("Trace one long swishy tail off the side!",
+          "Make the tail a little longer?",
+          "Tail-almost — finish the swish!",
+          "Swish-swish! Ready for the parade!"),
+  )
+
+  val dogStepHints: List<StepHints> = listOf(
+      StepHints("Trace the big dotted oval for my body!",
+          "A little more around the body?",
+          "So close — close up the oval!",
+          "That body is ready for belly rubs!"),
+      StepHints("Trace two long floppy ears on the sides!",
+          "One more floppy ear?",
+          "Almost — finish that ear!",
+          "Floppy ears — woof!"),
+      StepHints("Pop two happy eyes on my face!",
+          "One more eye, please!",
+          "Nearly there — finish that eye!",
+          "I can see you now — woof-woof!"),
+      StepHints("Trace my little round boop-nose!",
+          "A bit more on the nose!",
+          "So close — finish the nose!",
+          "Boop! Best nose ever!"),
+      StepHints("Trace a big smile under my nose!",
+          "A bit more smile, please!",
+          "Almost — finish the smile!",
+          "Happiest smile — thank you!"),
+      StepHints("Trace a silly little tongue peeking out!",
+          "A bit more tongue — bleh!",
+          "So close — finish the tongue!",
+          "Bleh! Silliest tongue!"),
+      StepHints("Trace a waggy tail out the back!",
+          "Make the tail a little bigger?",
+          "Wag-almost — finish the curl!",
+          "WAG-WAG! I'm ready for the show!"),
   )
 
   val help: List<HelpArticleDto> = listOf(
@@ -108,17 +307,17 @@ internal object LocalContent {
           id = "start-drawing",
           title = "How a lesson works",
           body =
-              "Each step shows you what to add next. Your coach never grades you — it helps you " +
-                  "play with lines until it looks right to you. When the coach says a step is complete, " +
-                  "you move to the next part of the animal.",
+              "Each step shows a dotted shape and a coach dot that traces it first — then you " +
+                  "trace it too. Your parts stay on the page, so piece by piece you draw the whole " +
+                  "animal yourself. The coach never grades you; it just cheers you on to the next part.",
       ),
       HelpArticleDto(
           id = "troubleshoot-blank",
           title = "My drawing is not showing up",
           body =
               "Make sure the canvas is in color (not the eraser) and that your screen brightness " +
-                  "is comfortable. If nothing appears, try bigger, slower lines — the coach loves to " +
-                  "see your marks!",
+                  "is comfortable. If nothing appears, try bigger, slower lines along the dots — the " +
+                  "coach loves to see your marks!",
       ),
       HelpArticleDto(
           id = "troubleshoot-sound",
@@ -131,9 +330,9 @@ internal object LocalContent {
           id = "magic-unlock",
           title = "What is the wiggly magic surprise?",
           body =
-              "The longer you play with a step and use the coach's gentle tips, the more practice " +
-                  "stars you save up. When you have enough practice and finish the last step, your " +
-                  "animal can wiggle, hop, or splash in a little celebration.",
+              "The longer you play and the more parts you trace, the more practice stars you save " +
+                  "up. When you finish the last part, your animal can wiggle, hop, or splash in a " +
+                  "little celebration.",
       ),
       HelpArticleDto(
           id = "parents-privacy",
